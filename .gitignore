@@ -1,0 +1,12 @@
+# object files
+*.dYSM
+*.o
+
+# lab manual files
+*.pdf
+*.zip
+
+# specific dev tool files and lab examples
+pth_*
+
+
