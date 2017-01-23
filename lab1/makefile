@@ -1,0 +1,14 @@
+all : main
+
+main : matrixgen
+	gcc -g -Wall -o main main.c sdk/lab1_IO.c -lpthread
+
+matrixgen : serialtester
+	gcc sdk/matrixgen.c -o matrixgen
+
+serialtester : clean
+	gcc sdk/serialtester.c sdk/lab1_IO.c -o serialtester
+
+
+clean :
+	rm -rf *.o *.dSYM main matrixgen serialtester data_input data_output
