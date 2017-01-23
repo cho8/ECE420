@@ -51,7 +51,8 @@ int main(int argc, char* argv[]) {
 	Lab1_loadinput(&A, &B, &n);
 
 	C = (int**) malloc(n*sizeof(int**));
-	for (int i=0; i<n; i++) {
+	int i;
+	for (i=0; i<n; i++) {
 		C[i] = (int*) malloc (n*sizeof(int*));
 	}
 
