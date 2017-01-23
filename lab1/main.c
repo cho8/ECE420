@@ -72,8 +72,6 @@ int main(int argc, char* argv[]) {
 	// save matrix using lab1_IO.c
 	Lab1_saveoutput(C, &n, end_time-start_time); // NOTE: output matrix arg might be weird here
 
-	print_matrix(C);
-
 	// free matrix mallocs
 	free(A);
 	free(B);
