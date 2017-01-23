@@ -1,7 +1,7 @@
 all : main
 
 main : matrixgen
-	gcc -g -Wall -o main main.c sdk/lab1_IO.c -lpthread
+	gcc -g -Wall -o main main.c sdk/lab1_IO.c -lpthread -lm 
 
 matrixgen : serialtester
 	gcc sdk/matrixgen.c -o matrixgen

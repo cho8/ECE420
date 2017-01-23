@@ -111,7 +111,7 @@ void* matrix_mul(void* rank) {
 
 			// do colxrow multiplication for the element
 			for(m=0; m<n; m++) {
-				C[i][j] += A[m][j] * B[i][m];
+				C[i][j] += A[i][m] * B[m][j];
 			}
 		}
 	}
