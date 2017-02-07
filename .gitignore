@@ -9,4 +9,8 @@
 # specific dev tool files and lab examples
 pth_*
 
-
+#executables
+matrixgen
+data_input
+data_output
+serialtester
