@@ -1,12 +1,11 @@
-all : main
 
-main : matrixgen
+main : 
 	gcc -g -Wall -o main main.c sdk/lab1_IO.c -lpthread -lm 
 
-matrixgen : serialtester
+matrixgen : 
 	gcc sdk/matrixgen.c -o matrixgen
 
-serialtester : clean
+serialtester : 
 	gcc sdk/serialtester.c sdk/lab1_IO.c -o serialtester
 
 
