@@ -8,30 +8,22 @@
 #include <pthread.h>
 
 #define STR_LEN 20
+#define NUM_STR 1024
 
 /* Global variables */
 char theArray[NUM_STR][STR_LEN];
+int numstrings = 0;
 pthread_mutex_t mutex;
 
 void* Operate(void *args);
-void* ServerEcho(void *args)
-{
-	int clientFileDescriptor=(int)args;
-	char str[20];
 
-	read(clientFileDescriptor,str,20);
-	printf("reading from client:%s\n",str);
-	write(clientFileDescriptor,str,20);
-	printf("echoing back to client\n");
-	close(clientFileDescriptor);
-}
-
-
-int main(int argc, char* argv) {
+int main(int argc, char* argv[]) {
 	if (argc != 3) {
-		printf("Usage: ./server <portnum> <numstrings>");
+		printf("Usage: ./server <portnum> <numstrings>\n");
 		return 0;
 	}
+
+	numstrings = atoi(argv[2]);
 
 	// Start server
 	struct sockaddr_in sock_var;
@@ -55,7 +47,7 @@ int main(int argc, char* argv) {
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
 				printf("Connected to client %d\n",clientFileDescriptor);
-				pthread_create(&t,NULL,ServerEcho,(void *)clientFileDescriptor);
+				pthread_create(&t,NULL,Operate,(void *)clientFileDescriptor);
 			}
 		}
 		close(serverFileDescriptor);
@@ -74,13 +66,10 @@ void* Operate(void* args) {
 
 	// Get pos from client
 	read(clientFileDescriptor,str,STR_LEN);
-	printf("reading from client:%s\n",str);
+	printf("Reading from client %d: %s\n",clientFileDescriptor,str);
 
-	// 
+	//
 
-
-
-	write(clientFileDescriptor,str,20);
-	printf("echoing back to client\n");
+	// write(clientFileDescriptor,str,20);
 	close(clientFileDescriptor);
 }
