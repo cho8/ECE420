@@ -91,6 +91,7 @@ void* Operate(void* rank) {
 		}
 		// else just read the message
 		read(clientFileDescriptor,str_ser,STR_LEN);
+		printf("%s\n", &str_ser);
 
 
 		close(clientFileDescriptor);
