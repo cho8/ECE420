@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define STR_LEN 20
+#define STR_LEN 50
 #define X	2
 
 /* Global Variables */
