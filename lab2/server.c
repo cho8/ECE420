@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define STR_LEN 20
+#define STR_LEN 50
 #define X		2
 
 /* Global variables */
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
 	int serverFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	int clientFileDescriptor;
 
-	pthread_t t[20];
+	pthread_t t[X];
 	pthread_mutex_init(&mutex, NULL);
 
 	sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
