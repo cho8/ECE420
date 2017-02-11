@@ -8,7 +8,7 @@
 #include <pthread.h>
 
 #define STR_LEN 20
-#define X	100
+#define X	2
 
 /* Global Variables */
 int port;
@@ -59,8 +59,8 @@ int main(int argc, char* argv[]) {
 void* Operate(void* rank) {
 	long my_rank = (long) rank;
 	printf("Thread %ld \n", my_rank);
-	char str_clnt[20];
-	char str_ser[20];
+	char str_clnt[STR_LEN];
+	char str_ser[STR_LEN];
 
 	// Dispatch request via socket stream
 	struct sockaddr_in sock_var;
@@ -82,6 +82,7 @@ void* Operate(void* rank) {
 			printf("W %d\n", pos);
 			sprintf(str_clnt, "W %d", pos);
 			write(clientFileDescriptor,str_clnt, STR_LEN);
+
 		} else {
 			// read message
 			printf("R %d\n", pos);
@@ -89,7 +90,7 @@ void* Operate(void* rank) {
 			write(clientFileDescriptor,str_clnt, STR_LEN);
 		}
 		// else just read the message
-		// read(clientFileDescriptor,str_ser,STR_LEN);
+		read(clientFileDescriptor,str_ser,STR_LEN);
 
 
 		close(clientFileDescriptor);
