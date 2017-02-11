@@ -7,13 +7,16 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "sdk/timer.h"
 #define STR_LEN 50
-#define X		2
+#define X	100
 
 /* Global variables */
 char** theArray;
 int numstrings = 0;
 pthread_mutex_t mutex;
+double times[X];
+double total_time=0;
 
 void* Operate(void *args);
 
@@ -55,19 +58,25 @@ int main(int argc, char* argv[]) {
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
 				printf("Connected to client %d\n",clientFileDescriptor);
-				pthread_create(&t, NULL, Operate, (void *)clientFileDescriptor);
+				GET_TIME(times[i]);
+				pthread_create(&t[i], NULL, Operate, (void *)clientFileDescriptor);
 			}
 
 			for(i=0;i<X;i++){		// join the threads
 				pthread_join(t[i], NULL);
+
+				double end_time;
+				GET_TIME(end_time);
+				total_time += end_time - times[i]; 
 			}
+			printf("Total time: %f\n", total_time);
+
 		}
 		close(serverFileDescriptor);
 	}
 	else {
 		printf("socket creation failed\n");
 	}
-
 	return 0;
 }
 
@@ -81,15 +90,12 @@ void* Operate(void* args) {
 	// Get pos from client
 	read(clientFileDescriptor,str_clnt,STR_LEN);
 	sscanf(str_clnt, "%c %d", &mode, &pos);
-	printf("Reading from client %d: %c %d\n",clientFileDescriptor,mode,pos);
 
 	// pthread_mutex_lock(&mutex);
 
 	if (mode == 'R') {
-		printf("Client reading\n");
 		sprintf(str_ser, theArray[pos]);
 	} else if (mode == 'W') {
-		printf("client writing\n");
 		sprintf(theArray[pos], "String %d has been modifed by a write request", pos);
 		sprintf(str_ser, theArray[pos]);
 	}
@@ -97,7 +103,6 @@ void* Operate(void* args) {
 
 
 	if (mode == 'R' || mode == 'W') {
-		printf("Echo to client\n");
 		write(clientFileDescriptor,str_ser,STR_LEN);
 	}
 	close(clientFileDescriptor);

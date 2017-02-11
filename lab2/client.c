@@ -8,7 +8,7 @@
 #include <pthread.h>
 
 #define STR_LEN 50
-#define X	2
+#define X	100
 
 /* Global Variables */
 int port;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
 void* Operate(void* rank) {
 	long my_rank = (long) rank;
-	printf("Thread %ld \n", my_rank);
+//	printf("Thread %ld \n", my_rank);
 	char str_clnt[STR_LEN];
 	char str_ser[STR_LEN];
 
@@ -79,19 +79,17 @@ void* Operate(void* rank) {
 
 		if (randNum >= 95) {// 5% are write operations, others are reads
 			// write message
-			printf("W %d\n", pos);
 			sprintf(str_clnt, "W %d", pos);
 			write(clientFileDescriptor,str_clnt, STR_LEN);
 
 		} else {
 			// read message
-			printf("R %d\n", pos);
 			sprintf(str_clnt, "R %d", pos);
 			write(clientFileDescriptor,str_clnt, STR_LEN);
 		}
 		// else just read the message
 		read(clientFileDescriptor,str_ser,STR_LEN);
-		printf("%s\n", &str_ser);
+		printf("%s\n", str_ser);
 
 
 		close(clientFileDescriptor);
