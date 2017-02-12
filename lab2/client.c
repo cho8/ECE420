@@ -71,7 +71,7 @@ void* Operate(void* rank) {
 	sock_var.sin_family=AF_INET;
 
 	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
-		printf("Connected to server %d\n",clientFileDescriptor);
+		//printf("Connected to server %d\n",clientFileDescriptor);
 
 		// Find a random position in theArray for read or write
 		int pos = rand_r(&seed[my_rank]) % numstrings;
@@ -89,7 +89,7 @@ void* Operate(void* rank) {
 		}
 		// else just read the message
 		read(clientFileDescriptor,str_ser,STR_LEN);
-		printf("%s\n", str_ser);
+		//printf("%s\n", str_ser);
 
 
 		close(clientFileDescriptor);

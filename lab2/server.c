@@ -16,7 +16,7 @@ char** theArray;
 int numstrings = 0;
 pthread_mutex_t mutex;
 double times[X];
-double total_time=0;
+double total_time;
 
 void* Operate(void *args);
 
@@ -54,10 +54,12 @@ int main(int argc, char* argv[]) {
 		listen(serverFileDescriptor,2000);
 
 		while(1) {    //loop infinity
+			total_time=0;
+
 			for(i=0;i<X;i++) {      //can support X clients at a time
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				printf("Connected to client %d\n",clientFileDescriptor);
+				//printf("Connected to client %d\n",clientFileDescriptor);
 				GET_TIME(times[i]);
 				pthread_create(&t[i], NULL, Operate, (void *)clientFileDescriptor);
 			}
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]) {
 				GET_TIME(end_time);
 				total_time += end_time - times[i]; 
 			}
-			printf("Total time: %f\n", total_time);
+			printf("%f\n", total_time);
 
 		}
 		close(serverFileDescriptor);
