@@ -9,8 +9,9 @@
 #include <string.h>
 
 #include "sdk/timer.h"
-#define STR_LEN 50
-#define X	1000
+
+#define STR_LEN 50		//max string length
+#define X		1000	//number of threads
 
 /* Global variables */
 char** theArray;
@@ -41,12 +42,13 @@ int main(int argc, char* argv[]) {
 	int serverFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	int clientFileDescriptor;
 
-	pthread_t t[X];
-	pthread_mutex_init(&mutex, NULL);
-
 	sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
 	sock_var.sin_port=atoi(argv[1]);
 	sock_var.sin_family=AF_INET;
+
+	pthread_t t[X];
+	//pthread_mutex_init(&mutex, NULL);
+
 
 	if (bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
 		printf("socket has been created\n");
@@ -85,7 +87,7 @@ void* Operate(void* args) {
 		pthread_mutex_lock(&mutex);
 		strcpy(str_ser, theArray[pos]);
 		pthread_mutex_unlock(&mutex);
-		
+
 	} else if (mode == 'W') {
 		sprintf(str_ser, "String %d has been modifed by a write request", pos);
 		pthread_mutex_lock(&mutex);
