@@ -9,7 +9,7 @@
 
 #include "sdk/timer.h"
 #define STR_LEN 50
-#define X	100
+#define X	1000
 
 /* Global variables */
 char** theArray;
@@ -93,7 +93,7 @@ void* Operate(void* args) {
 	read(clientFileDescriptor,str_clnt,STR_LEN);
 	sscanf(str_clnt, "%c %d", &mode, &pos);
 
-	// pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex);
 
 	if (mode == 'R') {
 		sprintf(str_ser, theArray[pos]);
@@ -101,7 +101,7 @@ void* Operate(void* args) {
 		sprintf(theArray[pos], "String %d has been modifed by a write request", pos);
 		sprintf(str_ser, theArray[pos]);
 	}
-	// pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex);
 
 
 	if (mode == 'R' || mode == 'W') {

@@ -8,13 +8,13 @@
 #include <pthread.h>
 
 #define STR_LEN 50
-#define X	100
+#define X	1000
 
 /* Global Variables */
 int port;
 int threads;
 int numstrings;
-int *seed;
+uint32_t *seed;
 
 /* Thread function */
 void* Operate(void* rank);
@@ -27,7 +27,8 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
-	int i, t;
+	int i;
+	long t;
 	pthread_t thread_handles[X];
 
 	/* Get command line args */
