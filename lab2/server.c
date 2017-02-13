@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 	sock_var.sin_family=AF_INET;
 
 	pthread_t t[X];
-	//pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_init(&mutex, NULL);
 
 
 	if (bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 		listen(serverFileDescriptor,2000);
 
 		while(1) {    //loop infinity
-			printf("New loop\n");
+
 			for(i=0;i<X;i++) {      //can support X clients at a time
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
@@ -83,26 +83,18 @@ void* Operate(void* args) {
 	read(clientFileDescriptor,str_clnt,STR_LEN);
 	sscanf(str_clnt, "%c %d", &mode, &pos);
 
+	pthread_mutex_lock(&mutex);
 	if (mode == 'R') {
-		pthread_mutex_lock(&mutex);
 		strcpy(str_ser, theArray[pos]);
-		pthread_mutex_unlock(&mutex);
-
 	} else if (mode == 'W') {
 		sprintf(str_ser, "String %d has been modifed by a write request", pos);
-		pthread_mutex_lock(&mutex);
 		strcpy(theArray[pos],str_ser);
-		pthread_mutex_unlock(&mutex);
-
-	} else {
-		printf("Not a request\n");
-		pthread_exit(0);
 	}
+	pthread_mutex_unlock(&mutex);
 
 
-	if (mode == 'R' || mode == 'W') {
-		write(clientFileDescriptor,str_ser,STR_LEN);
-	}
+	write(clientFileDescriptor,str_ser,STR_LEN);
+
 	close(clientFileDescriptor);
 	pthread_exit(0);
 }
