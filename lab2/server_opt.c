@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -23,6 +24,8 @@
 char** theArray;
 int numstrings = 0;
 pthread_mutex_t mutex;
+mylib_rwlock_t rwlock;
+
 double times[X];
 double total_time;
 
@@ -67,25 +70,11 @@ int main(int argc, char* argv[]) {
 		listen(serverFileDescriptor,2000);
 
 		while(1) {    //loop infinity
-			total_time=0;
-
 			for(i=0;i<X;i++) {      //can support X clients at a time
-
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				//printf("Connected to client %d\n",clientFileDescriptor);
-				GET_TIME(times[i]);
+				printf("Connected to client %d\n",clientFileDescriptor);
 				pthread_create(&t[i], NULL, Operate, (void *)clientFileDescriptor);
 			}
-
-			for(i=0;i<X;i++){		// join the threads
-				pthread_join(t[i], NULL);
-
-				double end_time;
-				GET_TIME(end_time);
-				total_time += end_time - times[i];
-			}
-			printf("%f\n", total_time);
-
 		}
 		close(serverFileDescriptor);
 	}
@@ -107,23 +96,31 @@ void* Operate(void* args) {
 	sscanf(str_clnt, "%c %d", &mode, &pos);
 
 	// pthread_mutex_lock(&mutex);
-	mylib_rwlock_rlock(&rwlock);
 
 	if (mode == 'R') {
-		sprintf(str_ser, theArray[pos]);
-	} else if (mode == 'W') {
+		//printf("%d client wants to read\n",pos);
+		mylib_rwlock_rlock(&rwlock);
+		strcpy(str_ser, theArray[pos]);
 		mylib_rwlock_unlock(&rwlock);
+		//printf("%d client finished reading\n",pos);	
+	} else if (mode == 'W') {
+		
+		//printf("%d client wants to write\n",pos);
+		sprintf(str_ser, "String %d has been modified by a write request", pos);
 		mylib_rwlock_wlock(&rwlock);
-		sprintf(theArray[pos], "String %d has been modifed by a write request", pos);
-		sprintf(str_ser, theArray[pos]);
+		strcpy(theArray[pos], str_ser);
+		mylib_rwlock_unlock(&rwlock);
+		//printf("%d client finished writing\n",pos);
+		
+		
 	}
 
 	//pthread_mutex_unlock(&mutex);
-	mylib_rwlock_unlock(&rwlock);
 
 
 	if (mode == 'R' || mode == 'W') {
 		write(clientFileDescriptor,str_ser,STR_LEN);
 	}
 	close(clientFileDescriptor);
+	pthread_exit(0);
 }

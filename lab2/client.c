@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "sdk/timer.h"
+
 #define STR_LEN 50
 #define X	1000
 
@@ -14,6 +16,7 @@
 int port;
 int threads;
 int numstrings;
+double start_time, end_time;
 uint32_t *seed;
 
 /* Thread function */
@@ -41,7 +44,8 @@ int main(int argc, char* argv[]) {
 	for (i=0; i< X; i++) {
 		seed[i]=i;
 	}
-
+	
+	GET_TIME(start_time);
 	/* Launch threads */
 	for (t = 0; t < threads; t++) {
 		pthread_create(&thread_handles[t], NULL, Operate, (void *) t);
@@ -50,7 +54,9 @@ int main(int argc, char* argv[]) {
 	for (t=0; t < threads; t++) {
 		pthread_join(thread_handles[t], NULL);
 	}
-
+	GET_TIME(end_time);
+	
+	printf("%f\n", end_time-start_time);
 
 	return 0;
 }
@@ -78,19 +84,22 @@ void* Operate(void* rank) {
 		int pos = rand_r(&seed[my_rank]) % numstrings;
 		int randNum = rand_r(&seed[my_rank]) % 100;
 
-		if (randNum >= 95) {// 5% are write operations, others are reads
+		if (randNum <= 5) {// 5% are write operations, others are reads
 			// write message
 			sprintf(str_clnt, "W %d", pos);
-			write(clientFileDescriptor,str_clnt, STR_LEN);
 
 		} else {
 			// read message
 			sprintf(str_clnt, "R %d", pos);
-			write(clientFileDescriptor,str_clnt, STR_LEN);
 		}
-		// else just read the message
+
+		// write request to server
+		// printf("Request %s\n", str_clnt);
+		write(clientFileDescriptor,str_clnt, STR_LEN);
+
+		// read server response
 		read(clientFileDescriptor,str_ser,STR_LEN);
-		//printf("%s\n", str_ser);
+		// printf("%s\n", str_ser);
 
 
 		close(clientFileDescriptor);
@@ -101,5 +110,5 @@ void* Operate(void* rank) {
 
 
 
-	return NULL;
+	pthread_exit(0);
 }

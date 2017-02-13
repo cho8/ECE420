@@ -19,4 +19,4 @@ arraysize=100
 
 clear
 echo "Start Server..."
-script -c  "./server $port $arraysize" times.txt
+script -c  "./server_opt $port $arraysize" times.txt

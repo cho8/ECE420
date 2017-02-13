@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "sdk/timer.h"
 #define STR_LEN 50
@@ -15,8 +16,6 @@
 char** theArray;
 int numstrings = 0;
 pthread_mutex_t mutex;
-double times[X];
-double total_time;
 
 void* Operate(void *args);
 
@@ -54,24 +53,13 @@ int main(int argc, char* argv[]) {
 		listen(serverFileDescriptor,2000);
 
 		while(1) {    //loop infinity
-			total_time=0;
-
+			printf("New loop\n");
 			for(i=0;i<X;i++) {      //can support X clients at a time
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
 				//printf("Connected to client %d\n",clientFileDescriptor);
-				GET_TIME(times[i]);
 				pthread_create(&t[i], NULL, Operate, (void *)clientFileDescriptor);
 			}
-
-			for(i=0;i<X;i++){		// join the threads
-				pthread_join(t[i], NULL);
-
-				double end_time;
-				GET_TIME(end_time);
-				total_time += end_time - times[i]; 
-			}
-			printf("%f\n", total_time);
 
 		}
 		close(serverFileDescriptor);
@@ -93,19 +81,26 @@ void* Operate(void* args) {
 	read(clientFileDescriptor,str_clnt,STR_LEN);
 	sscanf(str_clnt, "%c %d", &mode, &pos);
 
-	pthread_mutex_lock(&mutex);
-
 	if (mode == 'R') {
-		sprintf(str_ser, theArray[pos]);
+		pthread_mutex_lock(&mutex);
+		strcpy(str_ser, theArray[pos]);
+		pthread_mutex_unlock(&mutex);
+		
 	} else if (mode == 'W') {
-		sprintf(theArray[pos], "String %d has been modifed by a write request", pos);
-		sprintf(str_ser, theArray[pos]);
+		sprintf(str_ser, "String %d has been modifed by a write request", pos);
+		pthread_mutex_lock(&mutex);
+		strcpy(theArray[pos],str_ser);
+		pthread_mutex_unlock(&mutex);
+
+	} else {
+		printf("Not a request\n");
+		pthread_exit(0);
 	}
-	pthread_mutex_unlock(&mutex);
 
 
 	if (mode == 'R' || mode == 'W') {
 		write(clientFileDescriptor,str_ser,STR_LEN);
 	}
 	close(clientFileDescriptor);
+	pthread_exit(0);
 }
