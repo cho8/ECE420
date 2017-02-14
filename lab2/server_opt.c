@@ -1,36 +1,27 @@
-/*
- An optimized version of server.c.
- This implementation uses read-write locks to avoid race conditions
-*/
-
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "sdk/timer.h"
 #include "rwlock.h"
 
-#define STR_LEN 50
-#define X	1000
+#define STR_LEN 50		//max string length
+#define X		1000	//number of threads
+
 
 /* Global variables */
 char** theArray;
-int numstrings = 0;
+int numstrings;
 pthread_mutex_t mutex;
-mylib_rwlock_t rwlock;
-
-double times[X];
-double total_time;
+mylib_rwlock_t *rwlock;
 
 void* Operate(void *args);
-
 
 int main(int argc, char* argv[]) {
 	int i;
@@ -42,12 +33,14 @@ int main(int argc, char* argv[]) {
 	// Initialize theArray
 	numstrings = atoi(argv[2]);
 	theArray = (char **) malloc(sizeof(char *) * numstrings);
-
+	rwlock = (mylib_rwlock_t*) malloc (sizeof(mylib_rwlock_t) * numstrings);
 
 	for(i = 0; i < numstrings; i++) {
 		theArray[i] = (char *) malloc(sizeof(char) * STR_LEN);
 	  	sprintf(theArray[i], "String %d: the initial value", i);
+		mylib_rwlock_init(&rwlock[i]);
 	}
+	//mylib_rwlock_init(&rwlock);
 
 	// Start server
 	struct sockaddr_in sock_var;
@@ -58,12 +51,8 @@ int main(int argc, char* argv[]) {
 	sock_var.sin_port=atoi(argv[1]);
 	sock_var.sin_family=AF_INET;
 
-	// Thread inits
 	pthread_t t[X];
 	pthread_mutex_init(&mutex, NULL);
-   	mylib_rwlock_init(&rwlock);
-
-
 
 	if (bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
 		printf("socket has been created\n");
@@ -71,9 +60,13 @@ int main(int argc, char* argv[]) {
 
 		while(1) {    //loop infinity
 			for(i=0;i<X;i++) {      //can support X clients at a time
+
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				printf("Connected to client %d\n",clientFileDescriptor);
+				//printf("Connected to client %d\n",clientFileDescriptor);
 				pthread_create(&t[i], NULL, Operate, (void *)clientFileDescriptor);
+			}
+			for(i=0;i<X;i++) {
+				pthread_join(t[i],NULL);
 			}
 		}
 		close(serverFileDescriptor);
@@ -86,8 +79,10 @@ int main(int argc, char* argv[]) {
 
 void* Operate(void* args) {
 	int clientFileDescriptor=(int)args;
+
 	char str_clnt[STR_LEN];
 	char str_ser[STR_LEN];
+
 	char mode = '\0';
 	int pos = 0;
 
@@ -95,32 +90,24 @@ void* Operate(void* args) {
 	read(clientFileDescriptor,str_clnt,STR_LEN);
 	sscanf(str_clnt, "%c %d", &mode, &pos);
 
-	// pthread_mutex_lock(&mutex);
+	if (mode == 'W') {
+		//printf("%d Want to write %d\n", clientFileDescriptor, pos);
+		sprintf(str_ser, "String %d has been modifed by a write request", pos);
 
-	if (mode == 'R') {
-		//printf("%d client wants to read\n",pos);
-		mylib_rwlock_rlock(&rwlock);
-		strcpy(str_ser, theArray[pos]);
-		mylib_rwlock_unlock(&rwlock);
-		//printf("%d client finished reading\n",pos);	
-	} else if (mode == 'W') {
-		
-		//printf("%d client wants to write\n",pos);
-		sprintf(str_ser, "String %d has been modified by a write request", pos);
-		mylib_rwlock_wlock(&rwlock);
-		strcpy(theArray[pos], str_ser);
-		mylib_rwlock_unlock(&rwlock);
-		//printf("%d client finished writing\n",pos);
-		
-		
+		mylib_rwlock_wlock(&rwlock[pos]);		
+		sprintf(theArray[pos], str_ser);
+		mylib_rwlock_unlock(&rwlock[pos]);
+
+		//printf("%d Done writing %d\n", clientFileDescriptor, pos);
+	} else if (mode == 'R') {
+		//printf("%d Want to read %d\n", clientFileDescriptor, pos);
+		mylib_rwlock_rlock(&rwlock[pos]);
+		sprintf(str_ser, theArray[pos]);
+		mylib_rwlock_unlock(&rwlock[pos]);		
+
+		//printf("%d Done reading %d\n", clientFileDescriptor, pos);
 	}
 
-	//pthread_mutex_unlock(&mutex);
-
-
-	if (mode == 'R' || mode == 'W') {
-		write(clientFileDescriptor,str_ser,STR_LEN);
-	}
+	write(clientFileDescriptor,str_ser,STR_LEN);
 	close(clientFileDescriptor);
-	pthread_exit(0);
 }

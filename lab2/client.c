@@ -99,7 +99,7 @@ void* Operate(void* rank) {
 
 		// read server response
 		read(clientFileDescriptor,str_ser,STR_LEN);
-		// printf("%s\n", str_ser);
+		//printf("%s\n", str_ser);
 
 
 		close(clientFileDescriptor);

@@ -14,7 +14,7 @@
 # Parameters
 Duplicates=100
 # Port Number
-port=22222
+port=3000
 
 # The number of strings in theArray
 arraysize=100
@@ -25,7 +25,6 @@ echo "Start..."
 ATTEMPT=0
 while [[ $ATTEMPT -ne $Duplicates ]]; do
 	let ATTEMPT+=1
-	echo $ATTEMPT
-	./client $port $arraysize
+	./client $port $arraysize >> rwl_100.txt
 	sleep .5
 done

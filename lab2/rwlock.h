@@ -33,8 +33,9 @@ void mylib_rwlock_rlock(mylib_rwlock_t *l) {
 	condition wait, else increment count of readers and grant
 	read lock */
 	pthread_mutex_lock(&(l -> read_write_lock));
-	while ((l -> pending_writers > 0) || (l -> writer > 0))
+	while ((l -> pending_writers > 0) || (l -> writer > 0)) {
 		pthread_cond_wait(&(l -> readers_proceed), &(l -> read_write_lock));
+	}
 	l -> readers ++;
 	pthread_mutex_unlock(&(l -> read_write_lock));
 }
@@ -58,16 +59,16 @@ void mylib_rwlock_unlock(mylib_rwlock_t *l) {
 	are read locks, decrement count of read locks. If the count
 	is 0 and there is a pending writer, let it through, else if
 	there are pending readers, let them all go through */
-pthread_mutex_lock(&(l -> read_write_lock));
-if (l -> writer > 0)
-l -> writer = 0;
-else if (l -> readers > 0)
-l -> readers --;
-pthread_mutex_unlock(&(l -> read_write_lock));
-if ((l -> readers == 0) && (l -> pending_writers > 0))
-pthread_cond_signal(&(l -> writer_proceed));
-else if (l -> readers > 0)
-pthread_cond_broadcast(&(l -> readers_proceed));
+	pthread_mutex_lock(&(l -> read_write_lock));
+	if (l -> writer > 0)
+		l -> writer = 0;
+	else if (l -> readers > 0)
+		l -> readers --;
+	pthread_mutex_unlock(&(l -> read_write_lock));
+	if ((l -> readers == 0) && (l -> pending_writers > 0))
+		pthread_cond_signal(&(l -> writer_proceed));
+	else if (l -> readers > 0)
+		pthread_cond_broadcast(&(l -> readers_proceed));
 }
 
 #endif

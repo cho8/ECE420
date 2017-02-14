@@ -13,6 +13,7 @@
 #define STR_LEN 50		//max string length
 #define X		1000	//number of threads
 
+
 /* Global variables */
 char** theArray;
 int numstrings = 0;
@@ -55,14 +56,16 @@ int main(int argc, char* argv[]) {
 		listen(serverFileDescriptor,2000);
 
 		while(1) {    //loop infinity
-
 			for(i=0;i<X;i++) {      //can support X clients at a time
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
 				//printf("Connected to client %d\n",clientFileDescriptor);
+				
 				pthread_create(&t[i], NULL, Operate, (void *)clientFileDescriptor);
 			}
-
+			for(i=0;i<X;i++) {
+				pthread_join(t[i],NULL);
+			}
 		}
 		close(serverFileDescriptor);
 	}
@@ -82,11 +85,11 @@ void* Operate(void* args) {
 	// Get pos from client
 	read(clientFileDescriptor,str_clnt,STR_LEN);
 	sscanf(str_clnt, "%c %d", &mode, &pos);
-
+	
 	pthread_mutex_lock(&mutex);
 	if (mode == 'R') {
 		strcpy(str_ser, theArray[pos]);
-	} else if (mode == 'W') {
+	}else if (mode == 'W') {
 		sprintf(str_ser, "String %d has been modifed by a write request", pos);
 		strcpy(theArray[pos],str_ser);
 	}
@@ -94,7 +97,5 @@ void* Operate(void* args) {
 
 
 	write(clientFileDescriptor,str_ser,STR_LEN);
-
 	close(clientFileDescriptor);
-	pthread_exit(0);
 }
