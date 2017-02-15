@@ -13,12 +13,18 @@
 #define STR_LEN 50		//max string length
 #define X		1000	//number of threads
 
+/* typedef */
+typedef struct {
+	int fd; // file descriptor
+	int id; // thread rank
+} fd_thread_t;
 
 /* Global variables */
 char** theArray;
 int numstrings = 0;
 pthread_mutex_t mutex;
-
+double total_time;
+double *times;
 void* Operate(void *args);
 
 int main(int argc, char* argv[]) {
@@ -31,7 +37,7 @@ int main(int argc, char* argv[]) {
 	// Initialize theArray
 	numstrings = atoi(argv[2]);
 	theArray = (char **) malloc(sizeof(char *) * numstrings);
-
+	times = (double *) malloc(sizeof(double) * X);
 
 	for(i = 0; i < numstrings; i++) {
 		theArray[i] = (char *) malloc(sizeof(char) * STR_LEN);
@@ -56,16 +62,24 @@ int main(int argc, char* argv[]) {
 		listen(serverFileDescriptor,2000);
 
 		while(1) {    //loop infinity
+			total_time =0 ;
 			for(i=0;i<X;i++) {      //can support X clients at a time
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
 				//printf("Connected to client %d\n",clientFileDescriptor);
-				
-				pthread_create(&t[i], NULL, Operate, (void *)clientFileDescriptor);
+				fd_thread_t * ft = (fd_thread_t *)malloc(sizeof(fd_thread_t));				
+				ft->fd = clientFileDescriptor;
+				ft->id = i;
+				pthread_create(&t[i], NULL, Operate, (void *)ft);
 			}
 			for(i=0;i<X;i++) {
-				pthread_join(t[i],NULL);
+				pthread_join(t[i], NULL);;
+				total_time += times[i];
 			}
+			//printf("%f\n", total_time);
+			FILE *f = fopen("mutex_100.txt","w");
+			fprintf(f, "%f\n",total_time);
+			fclose(f);
 		}
 		close(serverFileDescriptor);
 	}
@@ -76,15 +90,20 @@ int main(int argc, char* argv[]) {
 }
 
 void* Operate(void* args) {
-	int clientFileDescriptor=(int)args;
+	fd_thread_t * ft = (fd_thread_t*) args;
+	int clientFileDescriptor=ft->fd;
 	char str_clnt[STR_LEN];
 	char str_ser[STR_LEN];
+	double start_time, end_time;
 	char mode = '\0';
 	int pos = 0;
+
 
 	// Get pos from client
 	read(clientFileDescriptor,str_clnt,STR_LEN);
 	sscanf(str_clnt, "%c %d", &mode, &pos);
+
+	GET_TIME(start_time);
 	
 	pthread_mutex_lock(&mutex);
 	if (mode == 'R') {
@@ -94,8 +113,9 @@ void* Operate(void* args) {
 		strcpy(theArray[pos],str_ser);
 	}
 	pthread_mutex_unlock(&mutex);
-
+	GET_TIME(end_time);
 
 	write(clientFileDescriptor,str_ser,STR_LEN);
 	close(clientFileDescriptor);
+	times[ft->id] = end_time - start_time;
 }

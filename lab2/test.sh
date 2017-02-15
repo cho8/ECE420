@@ -25,6 +25,7 @@ echo "Start..."
 ATTEMPT=0
 while [[ $ATTEMPT -ne $Duplicates ]]; do
 	let ATTEMPT+=1
+	echo $ATTEMPT
 	./client $port $arraysize >> rwl_100.txt
 	sleep .5
 done
