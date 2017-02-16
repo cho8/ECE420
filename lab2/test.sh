@@ -17,7 +17,7 @@ Duplicates=100
 port=3000
 
 # The number of strings in theArray
-arraysize=100
+arraysize=1000
 
 clear
 
@@ -26,6 +26,6 @@ ATTEMPT=0
 while [[ $ATTEMPT -ne $Duplicates ]]; do
 	let ATTEMPT+=1
 	echo $ATTEMPT
-	./client $port $arraysize >> rwl_100.txt
+	./client $port $arraysize
 	sleep .5
 done

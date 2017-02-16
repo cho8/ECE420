@@ -45,7 +45,6 @@ int main(int argc, char* argv[]) {
 		seed[i]=i;
 	}
 	
-	GET_TIME(start_time);
 	/* Launch threads */
 	for (t = 0; t < threads; t++) {
 		pthread_create(&thread_handles[t], NULL, Operate, (void *) t);
@@ -54,10 +53,8 @@ int main(int argc, char* argv[]) {
 	for (t=0; t < threads; t++) {
 		pthread_join(thread_handles[t], NULL);
 	}
-	GET_TIME(end_time);
 	
-	printf("%f\n", end_time-start_time);
-
+	
 	return 0;
 }
 
@@ -108,7 +105,4 @@ void* Operate(void* rank) {
 		printf("socket creation failed\n");
 	}
 
-
-
-	pthread_exit(0);
 }

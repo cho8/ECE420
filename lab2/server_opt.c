@@ -22,7 +22,6 @@ typedef struct {
 /* Global variables */
 char** theArray;
 int numstrings = 0;
-pthread_mutex_t mutex;
 pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
 double total_time;
 double *times;
@@ -55,7 +54,6 @@ int main(int argc, char* argv[]) {
 	sock_var.sin_family=AF_INET;
 
 	pthread_t t[X];
-	pthread_mutex_init(&mutex, NULL);
 	pthread_rwlock_init(&rwlock, NULL);
 
 	if (bind(serverFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
@@ -67,7 +65,7 @@ int main(int argc, char* argv[]) {
 			for(i=0;i<X;i++) {      //can support X clients at a time
 
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				printf("Connected to client %d\n",clientFileDescriptor);
+				//printf("Connected to client %d\n",clientFileDescriptor);
 				fd_thread_t * ft = (fd_thread_t *)malloc(sizeof(fd_thread_t));				
 				ft->fd = clientFileDescriptor;
 				ft->id = i;
@@ -78,6 +76,9 @@ int main(int argc, char* argv[]) {
 				total_time += times[i];
 			}
 			printf("%f\n", total_time);
+			FILE *f = fopen("rwl_1000.txt", "a");
+			fprintf(f, "%f\n", total_time);
+			fclose(f);
 		}
 		close(serverFileDescriptor);
 	}

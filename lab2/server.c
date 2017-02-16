@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
 	// Initialize theArray
 	numstrings = atoi(argv[2]);
+
 	theArray = (char **) malloc(sizeof(char *) * numstrings);
 	times = (double *) malloc(sizeof(double) * X);
 
@@ -77,7 +78,7 @@ int main(int argc, char* argv[]) {
 				total_time += times[i];
 			}
 			//printf("%f\n", total_time);
-			FILE *f = fopen("mutex_100.txt","w");
+			FILE *f = fopen("mutex_10000.txt","a");
 			fprintf(f, "%f\n",total_time);
 			fclose(f);
 		}
