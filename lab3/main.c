@@ -14,7 +14,7 @@ void gaussian_elim();
 void jordan_elim();
 void swap_rows(int src, int dest);
 int find_max(int k);
-int saveOutput(double **A, int size, double time, char * name);
+int savePrintedOutput(double **A, int size, double time, char * name);
 
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
@@ -34,25 +34,57 @@ int main(int argc, char* argv[]) {
 
 
 	#pragma omp parallel num_threads(thread) {
-	// Gaussian
-	gaussian_elim();
+		// Gaussian
+		int k;
+		for (k=0; k < size; k++) {
 
-	saveOutput(A, size, 10, "Gause_inter.txt");
-	#pragma omp barrier
+			#pragma omp single {
+				// Pivoting
+				int max_index = find_max(k);
+				swap_rows(k, max_index);
+			}
+			// Elimination
+			int i;
+			int j;
 
-	// Jordan
-	jordan_elim();
-	saveOutput(A, size, 10, "Jordan_inter.txt");
+			#pragma omp for schedule(dynamic,1) private(i,j)
+			for(i=k+1; i<size; i++) {
+				double temp = (A[i][k]/A[k][k]);
+				printf("%f\n", temp);
+				for (j=k; j<size+1; j++) {
+					A[i][j] = A[i][j] - (temp* A[k][j]);
+				}
+			}
+
+		}
+
+		#pragma omp barrier
+		saveOutput(A, size, 10, "Gaussian_inter.txt");
+
+
+		// Jordan
+		for(k=size-1; k>0; k--) {
+			int i;
+			#pragma omp for schedule(dynamic,1) private(i)
+			for(i=0;i<k;i++) {
+				A[i][size] = A[i][size] - (A[i][k] / A[k][k])*A[k][size];
+				A[i][k] = A[i][k] - (A[i][k]/A[k][k])*A[k][k];
+			}
+		}
+
+
 	}
 
 	// End time measurement
 	GET_TIME(end_time);
+
 
 	// Save Output
 	int i;
 	for (i = 0; i < size; i++){
 		result[i] = A[i][size] / A[i][i];
 	}
+	savePrintedOutput(A, size, end_time-start_time, "Jordan_inter.txt");
 	Lab3SaveOutput(result, size, end_time-start_time);
 	printf("Total Time: %f \n",end_time-start_time);
 
@@ -67,30 +99,7 @@ int main(int argc, char* argv[]) {
 		A
 ********/
 void gaussian_elim() {
-	int k;
 
-
-	for (k=0; k < size; k++) {
-
-		#pragma omp single {
-			// Pivoting
-			int max_index = find_max(k);
-			swap_rows(k, max_index);
-		}
-		// Elimination
-		int i;
-		int j;
-
-		#pragma omp for schedule(dynamic,1) private(i,j)
-		for(i=k+1; i<size; i++) {
-			double temp = (A[i][k]/A[k][k]);
-			printf("%f\n", temp);
-			for (j=k; j<size+1; j++) {
-				A[i][j] = A[i][j] - (temp* A[k][j]);
-			}
-		}
-
-	}
 
 }
 
@@ -100,14 +109,7 @@ void gaussian_elim() {
 *********/
 void jordan_elim() {
 	int k;
-	for(k=size-1; k>0; k--) {
-		int i;
-		#pragma omp for schedule(dynamic,1) private(i)
-		for(i=0;i<k;i++) {
-			A[i][size] = A[i][size] - (A[i][k] / A[k][k])*A[k][size];
-			A[i][k] = A[i][k] - (A[i][k]/A[k][k])*A[k][k];
-		}
-	}
+
 }
 
 /********
@@ -153,7 +155,7 @@ void swap_rows(int src, int dest) {
 /********
 	Print the intermediate matrix to file
 ********/
-int saveOutput(double **A, int size, double time, char * name) {
+int savePrintedOutput(double **A, int size, double time, char * name) {
 	FILE* op;
 	int i, j;
 
