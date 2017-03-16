@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <string.h>
 
-#include "sdk/timer.h"
+#include "timer.h"
 
 #define STR_LEN 50		//max string length
 #define X		1000	//number of threads

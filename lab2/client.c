@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "sdk/timer.h"
+#include "timer.h"
 
 #define STR_LEN 50
 #define X	1000
