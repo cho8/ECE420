@@ -11,6 +11,7 @@ pth_*
 
 #executables
 matrixgen
+datagen
 data_input
 data_output
 serialtester

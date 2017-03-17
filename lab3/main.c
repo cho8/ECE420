@@ -6,85 +6,102 @@
 #include "sdk/timer.h"
 
 int threads;
-double **A;		// Augmented matrix [A|b]
 int size;
+double **A;
 
 /* Prototypes */
-void gaussian_elim();
-void jordan_elim();
-void swap_rows(int src, int dest);
+void swap_rows( int src, int dest);
 int find_max(int k);
-int savePrintedOutput(double **A, int size, double time, char * name);
+int savePrintedOutput( int size, double time, char * name);
 
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
-		printf("Usage: ./main <num_threads>");
+		printf("Usage: ./main <num_threads>\n");
 		return 0;
 	}
 
 	threads = atoi(argv[1]);
-	double result[size];
+	//result = (double*) malloc(sizeof(double)*size);;
 
 	// Load matrix and vector from Lab3IO
 	Lab3LoadInput(&A, &size);
+	//savePrintedOutput(size,10,"Input.txt");
+	double result[size];
 
 	//  Start time measurement
-	double start_time, end_time;
+	double start_time=0;
+	double end_time=0;
 	GET_TIME(start_time);
 
-
-	#pragma omp parallel num_threads(thread) {
+	int k;
+	#pragma omp parallel num_threads(threads) \
+		default(none) shared(A,size) private(k) 
+	{
 		// Gaussian
-		int k;
 		for (k=0; k < size; k++) {
 
-			#pragma omp single {
+			#pragma omp single 
+				{
 				// Pivoting
+
+				// Find index of max
 				int max_index = find_max(k);
-				swap_rows(k, max_index);
+
+				// swap rows
+				swap_rows(k,max_index);
 			}
 			// Elimination
 			int i;
 			int j;
 
-			#pragma omp for schedule(dynamic,1) private(i,j)
+			#pragma omp for schedule(dynamic,12) private(i,j)			
 			for(i=k+1; i<size; i++) {
 				double temp = (A[i][k]/A[k][k]);
-				printf("%f\n", temp);
+				// printf("Coefficient %d , %f\n", i, temp);
 				for (j=k; j<size+1; j++) {
 					A[i][j] = A[i][j] - (temp* A[k][j]);
 				}
 			}
+			
 
 		}
 
 		#pragma omp barrier
-		saveOutput(A, size, 10, "Gaussian_inter.txt");
-
-
+	
+		//savePrintedOutput(A, size, 10, "Gaussian_inter.txt");
+		
 		// Jordan
+		int i;
 		for(k=size-1; k>0; k--) {
-			int i;
-			#pragma omp for schedule(dynamic,1) private(i)
-			for(i=0;i<k;i++) {
+			#pragma omp for schedule(dynamic,10) private(i)
+			for(i=0; i<k; i++) {
 				A[i][size] = A[i][size] - (A[i][k] / A[k][k])*A[k][size];
-				A[i][k] = A[i][k] - (A[i][k]/A[k][k])*A[k][k];
+				A[i][k] = A[i][k] - ((A[i][k]/A[k][k])*A[k][k]);
 			}
 		}
-
+		
 
 	}
+	printf("out of loop\n");
 
 	// End time measurement
 	GET_TIME(end_time);
 
 
-	// Save Output
+	// Save Output	
+	
 	int i;
 	for (i = 0; i < size; i++){
+		//printf("index %d\n", i);
 		result[i] = A[i][size] / A[i][i];
+		//printf("%d %f\n", i, result[i]);
 	}
-	savePrintedOutput(A, size, end_time-start_time, "Jordan_inter.txt");
+	printf("Result done!\n");
+
+	
+	//savePrintedOutput(size, end_time-start_time, "Result.txt");
+	
+	printf("Printed!\n");
 	Lab3SaveOutput(result, size, end_time-start_time);
 	printf("Total Time: %f \n",end_time-start_time);
 
@@ -92,25 +109,6 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-/********
-	Gaussian Elimination will transform the augmented matrix into its equivalent
-	upper triangular form. This is algorithm 1 in the lab manual.
-	global:
-		A
-********/
-void gaussian_elim() {
-
-
-}
-
-/*********
-	Jordan Elimination further transforms the upper triangular form into the
-	desired reduced form. This is algorithm 2 in the lab manual.
-*********/
-void jordan_elim() {
-	int k;
-
-}
 
 /********
 	In U, from row k to row n, find the row kp that has the maximum absolute
@@ -121,17 +119,18 @@ void jordan_elim() {
 		A
 ********/
 int find_max(int k) {
-	int i;
+
 	double curr_max = fabs(A[k][k]); // assuming square coefficient matrix
 	int curr_max_index=k;
-	for (i = 0; i<size; i++) {
+	int i;
+	for (i = k; i<size; i++) {
 		int value = fabs(A[i][k]);
 		if (value > curr_max) {
 			curr_max_index=i;
 			curr_max = value;
 		}
-	}
-
+	}	
+	//return 0;
 	return curr_max_index;
 }
 
@@ -155,7 +154,7 @@ void swap_rows(int src, int dest) {
 /********
 	Print the intermediate matrix to file
 ********/
-int savePrintedOutput(double **A, int size, double time, char * name) {
+int savePrintedOutput( int size, double time, char * name) {
 	FILE* op;
 	int i, j;
 
@@ -167,8 +166,11 @@ int savePrintedOutput(double **A, int size, double time, char * name) {
 	fprintf(op, "%d\n\n", size);
 	fprintf(op, "%lf\n\n", time);
 	for (i = 0; i < size; i++) {
-		for (j = 0; j< size + 1; j++)
+		printf("%d ", i);
+		for (j = 0; j< size+1; j++) {
+			printf("%d %f\n", j, A[i][j]);
 			fprintf(op, "%f\t", A[i][j]);
+		}
 		fprintf(op, "\n");
 	}
 	fclose(op);
