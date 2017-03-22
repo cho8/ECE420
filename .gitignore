@@ -5,9 +5,11 @@
 # lab manual files
 *.pdf
 *.zip
+*.docx
 
 # specific dev tool files and lab examples
 pth_*
+omp_*
 
 #executables
 matrixgen
@@ -17,5 +19,5 @@ data_output
 serialtester
 main
 
-#logging stuff
+#logging and submission stuff
 *.txt
