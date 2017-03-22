@@ -21,7 +21,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	threads = atoi(argv[1]);
-	//result = (double*) malloc(sizeof(double)*size);;
 
 	// Load matrix and vector from Lab3IO
 	Lab3LoadInput(&A, &size);
@@ -33,17 +32,17 @@ int main(int argc, char* argv[]) {
 	double end_time=0;
 	GET_TIME(start_time);
 
+	// Launch threads
 	int k;
 	#pragma omp parallel num_threads(threads) \
-		default(none) shared(A,size) private(k) 
+		default(none) shared(A,size) private(k)
 	{
-		// Gaussian
+		/* Gaussian Elimination */
 		for (k=0; k < size; k++) {
 
-			#pragma omp single 
-				{
+			#pragma omp single
+			{
 				// Pivoting
-
 				// Find index of max
 				int max_index = find_max(k);
 
@@ -54,7 +53,7 @@ int main(int argc, char* argv[]) {
 			int i;
 			int j;
 
-			#pragma omp for schedule(dynamic,12) private(i,j)			
+			#pragma omp for schedule(static, 8) private(i,j)
 			for(i=k+1; i<size; i++) {
 				double temp = (A[i][k]/A[k][k]);
 				// printf("Coefficient %d , %f\n", i, temp);
@@ -62,24 +61,27 @@ int main(int argc, char* argv[]) {
 					A[i][j] = A[i][j] - (temp* A[k][j]);
 				}
 			}
-			
+
 
 		}
 
+		// Wait for all threads to finish Gaussian
 		#pragma omp barrier
-	
-		//savePrintedOutput(A, size, 10, "Gaussian_inter.txt");
-		
-		// Jordan
+
+		// print the intermediate step for debugging
+		// #pragma omp single
+		// savePrintedOutput(A, size, 10, "Gaussian_inter.txt");
+
+		/* Jordan Elimination */
 		int i;
 		for(k=size-1; k>0; k--) {
-			#pragma omp for schedule(dynamic,10) private(i)
+			#pragma omp for schedule(static, 8) private(i)
 			for(i=0; i<k; i++) {
 				A[i][size] = A[i][size] - (A[i][k] / A[k][k])*A[k][size];
 				A[i][k] = A[i][k] - ((A[i][k]/A[k][k])*A[k][k]);
 			}
 		}
-		
+
 
 	}
 	printf("out of loop\n");
@@ -88,20 +90,17 @@ int main(int argc, char* argv[]) {
 	GET_TIME(end_time);
 
 
-	// Save Output	
-	
+	// Get output and save it
+
 	int i;
 	for (i = 0; i < size; i++){
 		//printf("index %d\n", i);
 		result[i] = A[i][size] / A[i][i];
 		//printf("%d %f\n", i, result[i]);
 	}
-	printf("Result done!\n");
 
-	
 	//savePrintedOutput(size, end_time-start_time, "Result.txt");
-	
-	printf("Printed!\n");
+
 	Lab3SaveOutput(result, size, end_time-start_time);
 	printf("Total Time: %f \n",end_time-start_time);
 
@@ -129,7 +128,7 @@ int find_max(int k) {
 			curr_max_index=i;
 			curr_max = value;
 		}
-	}	
+	}
 	//return 0;
 	return curr_max_index;
 }
@@ -141,7 +140,6 @@ int find_max(int k) {
 		src, dest -- row indices to be swapped
 	global:
 		A
-
 ********/
 void swap_rows(int src, int dest) {
 	double * temp;
@@ -152,7 +150,11 @@ void swap_rows(int src, int dest) {
 
 
 /********
-	Print the intermediate matrix to file
+	Print the intermediate matrix to file.
+	args:
+		size -- dimension of square matrix
+		time -- running time
+		name -- name of file
 ********/
 int savePrintedOutput( int size, double time, char * name) {
 	FILE* op;
