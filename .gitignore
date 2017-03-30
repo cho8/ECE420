@@ -21,3 +21,4 @@ main
 
 #logging and submission stuff
 *.txt
+!web-Stanford.txt
