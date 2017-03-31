@@ -14,10 +14,7 @@ omp_*
 #executables
 matrixgen
 datagen
-data_input
 data_output
-serialtester
-datatrim
 
 #logging and submission stuff
 *.txt
