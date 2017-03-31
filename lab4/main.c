@@ -56,7 +56,7 @@ int main (int argc, char* argv[]) {
     int begin_row = rank * chunksize;
 
     // Core calculation
-    GET_TIME(start_time);
+    if (rank==0) GET_TIME(start_time);
     do{
         ++iterationcount;
         vec_cp(r, r_pre, nodecount);
@@ -70,15 +70,18 @@ int main (int argc, char* argv[]) {
 	    r_local[i] *= DAMPING_FACTOR;
             r_local[i] += damp_const;
         }
-	// allgather generates result arra by concat r_locals from processes
+
+	// sync the results together
         MPI_Allgather(r_local, chunksize, MPI_DOUBLE, r, chunksize, MPI_DOUBLE, MPI_COMM_WORLD);
     } while(rel_error(r, r_pre, nodecount) >= EPSILON);
-    GET_TIME(end_time);
-    //printf("Program converges at %d th iteration.\n", iterationcount);
 
-	
-    // post processing
-    Lab4_saveoutput(r, nodecount, end_time-start_time);
+    if (rank == 0) {
+        GET_TIME(end_time);
+        Lab4_saveoutput(r, nodecount, end_time-start_time);
+	printf("Time: %f\n", end_time-start_time);
+    }
+
+    // post-processing
     node_destroy(nodehead, nodecount);
     free(num_in_links); 
     free(num_out_links);
