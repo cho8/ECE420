@@ -1,26 +1,20 @@
 CC = gcc
 CFLAGS = -g -Wall -lpthread -lm
 
-###
-# Setting default make
-###
-default: datatrim serialtester main
-all: datatrim serialtester main
+all: datatrim serialtester main reduce
 
-###
-# Support
-###
+
 datatrim:
 	$(CC) -o datatrim sdk/datatrim.c
 
 serialtester:
-	$(CC) -o serialtester sdk/serialtester.c sdk/Lab4_IO.c
+	$(CC) -o serialtester sdk/serialtester.c sdk/Lab4_IO.c -lm
 
 main:
 	mpicc $(CFLAGS) -o main main.c sdk/Lab4_IO.c
 
-###
-# Clean process
-###
+reduce:
+	mpicc $(CFLAGS) -o main_reduce main_reduce.c sdk/Lab4_IO.c
+
 clean:
-	rm -f datatrim serialtester main
+	rm -f datatrim serialtester main main_reduce
