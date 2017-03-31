@@ -17,7 +17,7 @@ datagen
 data_input
 data_output
 serialtester
-main
+datatrim
 
 #logging and submission stuff
 *.txt

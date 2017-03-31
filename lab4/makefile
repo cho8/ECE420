@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -g -Wall -lpthread -lm
 
-all: datatrim serialtester main reduce
+all: datatrim serialtester main
 
 
 datatrim:
