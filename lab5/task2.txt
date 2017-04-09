@@ -1,0 +1,3 @@
+val text = sc.textFile("data_input")
+var result = text.map(line => (line.split("\t")(0), line.split("\t")(1))).groupByKey()
+result.collect().foreach((x) => (println( (x._1), (x._2))))

@@ -19,3 +19,4 @@ data_output
 #logging and submission stuff
 *.txt
 !web-Stanford.txt
+!task*.txt
